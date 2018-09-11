@@ -1,0 +1,41 @@
+{
+    "OLI_TIRS": {
+        "B1": "Ultra Blue (UB)",
+        "B2": "Blue",
+        "B3": "Green",
+        "B4": "Red",
+        "B5": "Near Infrared (NIR)",
+        "B6": "Shortwave Infrared 1 (SWIR)",
+        "B7": "Shortwave Infrared 2 (SWIR2)",
+        "B8": "Panchromatic (PAN)",
+        "B9": "Cirrus",
+        "B10": "Thermal Infrared 1 (TIRS)",
+        "B11": "Thermal Infrared 2 (TIRS2)"
+    },
+    "ETM": {
+        "B1": "Blue",
+        "B2": "Green",
+        "B3": "Red",
+        "B4": "Near Infrared (NIR)",
+        "B5": "Shortwave Infrared 1 (SWIR)",
+        "B6_VCID_1": "Thermal Infrared 1 (TIRS)",
+        "B6_VCID_2": "Thermal Infrared 2 (TIRS2)",
+        "B7": "Shortwave Infrared 2 (SWIR2)",
+        "B8": "Panchromatic (PAN)"
+    },
+    "TM": {
+        "B1": "Blue",
+        "B2": "Green",
+        "B3": "Red",
+        "B4": "Near Infrared (NIR)",
+        "B5": "Shortwave Infrared 1 (SWIR)",
+        "B6": "Thermal (TIRS)",
+        "B7": "Shortwave Infrared 2 (SWIR2)"
+    },
+    "MSS": {
+        "B4": "Green",
+        "B5": "Red",
+        "B6": "Near Infrared 1 (NIR)",
+        "B7": "Near Infrared 2 (NIR2)"
+    }
+}
