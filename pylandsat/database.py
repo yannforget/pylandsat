@@ -50,6 +50,7 @@ class LandsatDB:
     """Initialize and query a Spatialite-enabled SQLite database."""
 
     def __init__(self):
+        os.makedirs(user_data_dir('pylandsat'), exist_ok=True)
         self.path = os.path.join(user_data_dir('pylandsat'), 'landsat.db')
 
     def connect(self):
