@@ -78,7 +78,7 @@ class Catalog():
         if geom:
             geom = wkt.dumps(geom, rounding_precision=8)
         # Default values
-        if not maxcloud:
+        if not maxcloud and not isinstance(maxcloud, float):
             maxcloud = 100.
         if not sensors:
             sensors = SENSORS
