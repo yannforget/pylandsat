@@ -21,7 +21,7 @@ from pylandsat import preprocessing
 
 BANDS = json.loads(resource_string(__name__, 'bands.json'))
 
-    
+
 def _to_numeric(value):
     """Try to convert a string to an integer or a float.
     If not possible, returns the initial string.
@@ -49,7 +49,7 @@ def _suffix_from_bnum(band_number):
         return 'B' + str(band_number)[0] + '_VCID_' + str(band_number)[1]
     return 'B' + str(band_number)
 
-    
+
 def _suffix_from_name(band_name, sensor):
     """Get file suffix from band name (either long or short)."""
     if sensor not in BANDS:
@@ -170,7 +170,10 @@ class Scene:
     @property
     def sensor(self):
         """Sensor ID."""
-        return self.mtl['PRODUCT_METADATA']['SENSOR_ID']
+        sensor = self.mtl['PRODUCT_METADATA']['SENSOR_ID']
+        if sensor == 'MSS' and self.spacecraft in ('LANDSAT_4', 'LANDSAT_5'):
+            sensor += '_'
+        return sensor
 
     @property
     def date(self):

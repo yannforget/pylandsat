@@ -32,6 +32,12 @@
         "B6": "Thermal (TIRS)",
         "B7": "Shortwave Infrared 2 (SWIR2)"
     },
+    "MSS_": {
+        "B1": "Green",
+        "B2": "Red",
+        "B3": "Near Infrared 1 (NIR)",
+        "B4": "Near Infrared 2 (NIR2)"
+    },
     "MSS": {
         "B4": "Green",
         "B5": "Red",
