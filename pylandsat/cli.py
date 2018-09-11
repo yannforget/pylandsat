@@ -6,6 +6,7 @@ from pkg_resources import resource_string
 
 from appdirs import user_data_dir
 import click
+from geopy import Nominatim
 from shapely.geometry import shape, Point
 
 from pylandsat.catalog import Catalog
@@ -83,6 +84,8 @@ def _geom_from_geojson(fpath):
               help='Area of interest (GeoJSON file).')
 @click.option('-l', '--latlon', nargs=2, type=click.FLOAT, default=None,
               help='Point of interest (decimal lat/lon).')
+@click.option('-a', '--address', type=click.STRING, default=None,
+              help='Address of interest.')
 @click.option('-p', '--path', type=click.INT, default=None,
               help='WRS2 path.')
 @click.option('-r', '--row', type=click.INT, default=None,
@@ -105,6 +108,11 @@ def search(begin, end, geojson, latlon, path, row, clouds, sensors, tiers,
         geom = _geom_from_geojson(geojson)
     elif latlon:
         y, x = latlon
+        geom = Point(x, y)
+    elif address:
+        geoloc = Nominatim(user_agent='pylandsat')
+        loc = geoloc.geocode(address)
+        x, y = loc.longitude, loc.latitude
         geom = Point(x, y)
     else:
         geom = None
