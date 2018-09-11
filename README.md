@@ -6,6 +6,13 @@ Landsat scenes from the public dataset hosted on
 Additionally, it includes a set of classes and methods to access and
 preprocess the downloaded scenes.
 
+Only Landsat [Collection 1](https://landsat.usgs.gov/landsat-collections) is supported, i.e. level-1 data products from the following sensors and satellite missions:
+
+* Landsat 8 OLI/TIRS
+* Landsat 7 ETM+
+* Landsat 4-5 TM
+* Landsat 1-5 MSS
+
 # Installation
 
 `pip install pylandsat`
@@ -186,6 +193,9 @@ print(scene.available_bands())
 print(scene.product_id)
 print(scene.sensor)
 print(scene.date)
+
+# Access MTL metadata
+print(scene.mtl['IMAGE_ATTRIBUTES']['CLOUD_COVER_LAND'])
 
 # Quality band
 plt.imshow(scene.quality.read())
