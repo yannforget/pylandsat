@@ -48,4 +48,3 @@ setup(
         pylandsat=pylandsat.cli:cli
     """,
 )
-
