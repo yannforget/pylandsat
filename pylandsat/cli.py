@@ -116,7 +116,7 @@ def search(begin, end, geojson, latlon, address, path, row, clouds, sensors,
         geom = Point(x, y)
     else:
         geom = None
-    
+
     # If only year provided, set default month and day
     if len(begin) == 4:
         begin += '-01-01'
