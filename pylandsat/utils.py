@@ -65,6 +65,9 @@ def download_file(url, outdir, progressbar=False, verify=False):
     remotesize = int(r.headers.get('Content-Length', 0))
     etag = r.headers.get('ETag', '').replace('"', '')
 
+    if r.status_code != 200:
+        raise requests.exceptions.HTTPError(str(r.status_code))
+
     if os.path.isfile(fpath) and os.path.getsize(fpath) == remotesize:
         return fpath
     if progressbar:
