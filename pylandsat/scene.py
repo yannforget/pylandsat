@@ -187,6 +187,11 @@ class Scene:
     def wrs_row(self):
         """WRS2 Row."""
         return self.mtl['PRODUCT_METADATA']['WRS_ROW']
+    
+    @property
+    def quality(self):
+        """Quality band."""
+        return Band(self, 'BQA')
 
 
 class Band:
@@ -198,7 +203,7 @@ class Band:
         self.long_name = BANDS[self.scene.sensor][suffix]
         self.name = _band_shortname(self.long_name)
         self.bnum = _band_number(self.suffix)
-    
+
     def read(self):
         """Read band data as a numpy 2d array."""
         with rasterio.open(self.path) as src:
