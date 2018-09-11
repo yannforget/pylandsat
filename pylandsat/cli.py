@@ -101,8 +101,8 @@ def _geom_from_geojson(fpath):
 @click.option('-o', '--output', default=None,
               type=click.Path(file_okay=True, writable=True),
               help='Output CSV file.')
-def search(begin, end, geojson, latlon, path, row, clouds, sensors, tiers,
-           slcoff, output):
+def search(begin, end, geojson, latlon, address, path, row, clouds, sensors,
+           tiers, slcoff, output):
     """Search for scenes in the Google Landsat Public Dataset catalog."""
     if geojson:
         geom = _geom_from_geojson(geojson)
