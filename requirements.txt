@@ -7,3 +7,4 @@ pandas
 tqdm
 numpy
 rasterio
+geopy

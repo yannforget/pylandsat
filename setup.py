@@ -40,7 +40,8 @@ setup(
         'pandas',
         'tqdm',
         'numpy',
-        'rasterio'
+        'rasterio',
+        'geopy'
     ],
     include_package_data=True,
     entry_points="""
