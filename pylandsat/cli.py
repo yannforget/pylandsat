@@ -44,7 +44,8 @@ def list_available_files(sensor):
 
 
 @click.command(name='sync-database')
-@click.option('-f', '--force', default=False, help='Overwrite existing files.')
+@click.option('-f', '--force', default=False, is_flag=True,
+              help='Overwrite existing database.')
 def syncdb(force):
     """Download Landsat Catalog and WRS2 shapefile and export the data to a
     local SQLite database.
