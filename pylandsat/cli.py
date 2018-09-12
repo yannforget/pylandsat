@@ -1,5 +1,6 @@
 """Command-line interface."""
 
+import csv
 import json
 import os
 from pkg_resources import resource_string
@@ -92,6 +93,16 @@ def _geom_from_address(address):
     loc = geoloc.geocode(address)
     return Point(loc.longitude, loc.latitude)
 
+def _to_csv(records, output_file):
+    """Write a list of dicts to a CSV file."""
+    if not len(records):
+        return
+    with open(output_file, 'w') as dst:
+        writer = csv.DictWriter(dst, records[0].keys())
+        writer.writeheader()
+        for record in records:
+            writer.writerow(record)
+
 
 @click.command(name='search')
 @click.option('-b', '--begin', type=click.STRING,
@@ -148,10 +159,10 @@ def search(begin, end, geojson, latlon, address, path, row, clouds, sensors,
                             tiers, slc=not slcoff)
 
     if output:
-        scenes.to_csv(output)
+        _to_csv(scenes, output)
     else:
-        for product_id in scenes.index:
-            click.echo(product_id)
+        for scene in scenes:
+            click.echo(scene['product_id'])
 
 
 @click.command(name='download')

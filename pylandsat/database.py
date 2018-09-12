@@ -2,14 +2,16 @@
 and export them to a Spatialite-enabled SQLite database.
 """
 
+from collections import OrderedDict
+import csv
 from datetime import datetime
+import dateutil
 import os
 import shutil
 import sqlite3
 import tempfile
 
 import fiona
-import pandas as pd
 from appdirs import user_data_dir
 from shapely import wkt
 from shapely.geometry import shape
@@ -60,18 +62,39 @@ class LandsatDB:
         conn.execute("SELECT load_extension('mod_spatialite');")
         return conn
 
-    def query(self, sql, **kwargs):
-        """Perform an SQL query and returns the result as a Pandas dataframe."""
-        if 'params' in kwargs:
-            sql, kwargs['params'] = _format_placeholders(sql, kwargs['params'])
+    def query(self, query, params=None):
+        """Perform an SQL query and returns the result as a dict."""
         conn = self.connect()
-        df = pd.read_sql(sql, conn, **kwargs)
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+        if params:
+            query, params = _format_placeholders(query, params)
+            c.execute(query, params)
+        else:
+            c.execute(query)
+        rows = c.fetchall()
         conn.close()
-        return df
+        return [dict(row) for row in rows]
+
+
+def _parse_datestring(datestring):
+    """Parse ISO-8601 date string from the index.csv file."""
+    date = dateutil.parser.isoparse(datestring[:26])
+    return int(date.timestamp())
+
+
+def _parse_row(row):
+    """Parse a row from the index.csv file."""
+    INDEXES = [1, 0, 9, 10, 7, 11]
+    product_id, scene_id, path, row, sensing_time, cloud_cover = (row[i] for i in INDEXES)
+    path, row = int(path), int(row)
+    cloud_cover = float(cloud_cover)
+    sensing_time = _parse_datestring(sensing_time)
+    return (product_id, scene_id, path, row, sensing_time, cloud_cover)
 
 
 def sync_catalog():
-    """Download Landsat catalog from Google and update the SQLite dabase
+    """Download Landsat catalog from Google and update the SQLite database
     accordingly.
     """
     CATALOG_URL = 'https://storage.googleapis.com/gcp-public-data-landsat/index.csv.gz'
@@ -79,44 +102,23 @@ def sync_catalog():
     fpath = utils.download_file(CATALOG_URL, tmpdir, progressbar=True)
     fpath = utils.decompress(fpath, remove_archive=True)
 
+    # Create database and 'catalog' table
     db = LandsatDB()
     conn = db.connect()
     c = conn.cursor()
-
-    DTYPES = {
-        'PRODUCT_ID': str,
-        'SCENE_ID': str,
-        'SENSING_TIME': str,
-        'CLOUD_COVER': float,
-        'WRS_PATH': int,
-        'WRS_ROW': int
-    }
-
-    # Create the table
     c.execute(queries.CATALOG_CREATE)
     conn.commit()
 
-    # Insert values by reading and preprocessing CSV catalog in chunks
+    # Insert CSV rows into the SQLite database
     length = sum(1 for line in open(fpath))
-    progress = tqdm(total=length, unit_scale=True, unit=' rows')
-    CHUNKSIZE = 10**6
-    for chunk in pd.read_csv(
-            fpath, usecols=DTYPES.keys(), dtype=DTYPES,
-            parse_dates=['SENSING_TIME'], chunksize=CHUNKSIZE):
-        nrows = len(chunk)
-        chunk = chunk.dropna(axis=0)
-        if chunk.empty:
-            progress.update(nrows)
-            continue
-        chunk.SENSING_TIME = chunk.SENSING_TIME.apply(datetime.timestamp)
-        chunk.SENSING_TIME = chunk.SENSING_TIME.apply(int)
-        values = zip(
-            chunk.PRODUCT_ID, chunk.SCENE_ID, chunk.WRS_PATH, chunk.WRS_ROW,
-            chunk.SENSING_TIME, chunk.CLOUD_COVER)
-        c.executemany(queries.CATALOG_UPDATE, values)
-        progress.update(nrows)
-
-    c.execute(queries.CATALOG_INDEX)
+    progress = tqdm(total=length, unit=' rows')
+    with open(fpath) as src:
+        reader = csv.reader(src)
+        _ = reader.__next__()  # ignore header
+        for row in reader:
+            if row[1]:
+                c.execute(queries.CATALOG_UPDATE, _parse_row(row))
+            progress.update(1)
     progress.close()
     conn.commit()
     conn.close()

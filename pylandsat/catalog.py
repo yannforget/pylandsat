@@ -67,6 +67,7 @@ class Catalog():
         # Convert strings to list if necessary
         path, row = _to_list(path), _to_list(row)
         sensors, tiers = _to_list(sensors), _to_list(tiers)
+
         # Convert str to datetimes and to integer timestamps
         if isinstance(begin, str):
             begin = datetime.strptime(begin, '%Y-%m-%d')
@@ -74,9 +75,11 @@ class Catalog():
             end = datetime.strptime(end, '%Y-%m-%d')
         begin = int(begin.timestamp())
         end = int(end.timestamp())
+
         # Convert geometry to WKT
         if geom:
             geom = wkt.dumps(geom, rounding_precision=8)
+
         # Default values
         if not maxcloud and not isinstance(maxcloud, float):
             maxcloud = 100.
@@ -84,32 +87,36 @@ class Catalog():
             sensors = SENSORS
         if not tiers:
             tiers = TIERS
+
         # Spatial filter with WRS paths and rows
         if path and row:
             scenes = self.db.query(
-                sql=queries.CATALOG_SEARCH_PATHROW,
-                params=(path, row, begin, end, maxcloud, sensors, tiers),
-                parse_dates=['sensing_time'], index_col='product_id')
+                query=queries.CATALOG_SEARCH_PATHROW,
+                params=(path, row, begin, end, maxcloud, sensors, tiers))
         elif geom:
             scenes = self.db.query(
-                sql=queries.CATALOG_SEARCH_GEOM,
-                params=(geom, begin, end, maxcloud, sensors, tiers, geom),
-                parse_dates=['sensing_time'], index_col='product_id')
+                query=queries.CATALOG_SEARCH_GEOM,
+                params=(geom, begin, end, maxcloud, sensors, tiers, geom))
         else:
-            raise ValueError('Path/Row or Geom must be provided.')
+            raise ValueError('No spatial information provided.')
+        
+        for scene in scenes:
+            scene.update(
+                sensing_time=datetime.fromtimestamp(scene['sensing_time']))
 
-        def _slc(row):
-            FAILURE = datetime(2003, 5, 31)
-            if row.index[3] != '7':
+        def _slc_on(scene):
+            FAILURE = datetime(2003, 5)
+            sat = scene['product_id'][3]
+            if sat != '7':
                 return True
-            elif row.sensing_time >= FAILURE:
+            elif scene['sensing_time'] >= FAILURE:
                 return False
             else:
                 return True
-
+        
         if slc:
-            slc_on = scenes.apply(_slc, axis=1)
-            scenes = scenes[slc_on]
+            scenes_ = scenes.copy()
+            scenes = [scene for scene in scenes_ if _slc_on(scene)]
 
         return scenes
 
@@ -119,9 +126,13 @@ class Catalog():
         of the geometry of interest if it is not a polygon.
         """
         geom_wkt = wkt.dumps(geom, rounding_precision=8)
-        pathrows = self.db.query(
+        path_row = self.db.query(
             queries.WRS_SEARCH, params=(geom_wkt, geom_wkt))
+
         if 'POLYGON' in geom_wkt:
-            pathrows['coverage'] = pathrows.geom.apply(
-                lambda x: geom.intersection(wkt.loads(x)).area / geom.area)
-        return pathrows
+            for pr in path_row:
+                footprint = wkt.loads(pr['geom'])
+                cover = geom.intersection(footprint).area / geom.area
+                pr.update(cover=cover)
+
+        return path_row
