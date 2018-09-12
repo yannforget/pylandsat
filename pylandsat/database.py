@@ -70,13 +70,6 @@ class LandsatDB:
         return df
 
 
-def _gs_to_http(url):
-    """Replace GS URL with public http."""
-    return url.replace(
-        'gs://gcp-public-data-landsat/',
-        'http://storage.googleapis.com/gcp-public-data-landsat/')
-
-
 def sync_catalog():
     """Download Landsat catalog from Google and update the SQLite dabase
     accordingly.
@@ -95,7 +88,6 @@ def sync_catalog():
         'SCENE_ID': str,
         'SENSING_TIME': str,
         'CLOUD_COVER': float,
-        'BASE_URL': str,
         'WRS_PATH': int,
         'WRS_ROW': int
     }
@@ -118,7 +110,6 @@ def sync_catalog():
             continue
         chunk.SENSING_TIME = chunk.SENSING_TIME.apply(datetime.timestamp)
         chunk.SENSING_TIME = chunk.SENSING_TIME.apply(int)
-        chunk.BASE_URL = chunk.BASE_URL.apply(_gs_to_http)
         values = zip(
             chunk.PRODUCT_ID, chunk.SCENE_ID, chunk.WRS_PATH, chunk.WRS_ROW,
             chunk.SENSING_TIME, chunk.CLOUD_COVER)

@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS catalog (
 CATALOG_UPDATE = """
 INSERT OR IGNORE INTO catalog (product_id, scene_id, path, row,
   sensing_time, cloud_cover)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?);"""
+  VALUES (?, ?, ?, ?, ?, ?);"""
 
 # Create index on path/row
 CATALOG_INDEX = "CREATE INDEX idx_catalog_pathrow ON catalog (path, row);"
@@ -54,8 +54,7 @@ WHERE Intersects(geom, GeomFromText(?, 4326))
 # Search the catalog using path and row as spatial filtering
 CATALOG_SEARCH_PATHROW = """
 SELECT catalog.product_id, catalog.scene_id, catalog.path, catalog.row,
-  catalog.sensing_time, catalog.cloud_cover, catalog.total_size,
-  catalog.base_url, AsText(wrs.geom) AS geom
+  catalog.sensing_time, catalog.cloud_cover, AsText(wrs.geom) AS geom
 FROM catalog
 INNER JOIN wrs ON wrs.path = catalog.path AND wrs.row = catalog.row
 WHERE catalog.path IN ? AND catalog.row IN ?
@@ -70,8 +69,7 @@ WHERE catalog.path IN ? AND catalog.row IN ?
 # sensor ids, list of tiers, geom)
 CATALOG_SEARCH_GEOM = """
 SELECT catalog.product_id, catalog.scene_id, catalog.path, catalog.row,
-  catalog.sensing_time, catalog.cloud_cover, catalog.total_size,
-  catalog.base_url, AsText(wrs.geom) AS geom
+  catalog.sensing_time, catalog.cloud_cover, AsText(wrs.geom) AS geom
 FROM catalog
 INNER JOIN wrs ON wrs.path = catalog.path AND wrs.row = catalog.row
 WHERE Intersects(wrs.geom, GeomFromText(?, 4326))
