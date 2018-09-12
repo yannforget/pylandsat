@@ -101,6 +101,9 @@ def _to_csv(records, output_file):
         writer = csv.DictWriter(dst, records[0].keys())
         writer.writeheader()
         for record in records:
+            if 'sensing_time' in record:
+                date = record['sensing_time'].strftime('%Y-%m-%d')
+                record.update(sensing_time=date)
             writer.writerow(record)
 
 
