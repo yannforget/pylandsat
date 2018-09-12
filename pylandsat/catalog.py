@@ -105,7 +105,7 @@ class Catalog():
                 sensing_time=datetime.fromtimestamp(scene['sensing_time']))
 
         def _slc_on(scene):
-            FAILURE = datetime(2003, 5)
+            FAILURE = datetime(2003, 5, 31)
             sat = scene['product_id'][3]
             if sat != '7':
                 return True
