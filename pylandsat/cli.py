@@ -6,8 +6,14 @@ from pkg_resources import resource_string
 
 from appdirs import user_data_dir
 import click
-from geopy import Nominatim
 from shapely.geometry import shape, Point
+
+try:
+    from geopy import Nominatim
+    _has_geopy = True
+except ImportError:
+    _has_geopy = False
+    pass
 
 from pylandsat.catalog import Catalog
 from pylandsat.database import sync_catalog, sync_wrs
@@ -19,7 +25,7 @@ def cli():
     pass
 
 
-@click.command(name='print-datadir')
+@click.command(name='print-data-dir')
 def print_datadir():
     """Print user data directory where database is stored."""
     click.echo(user_data_dir(appname='pylandsat'))
@@ -76,6 +82,17 @@ def _geom_from_geojson(fpath):
     return geom
 
 
+def _geom_from_address(address):
+    """Get a Shapely point geometry by geocoding an address with
+    Nominatim.
+    """
+    if not _has_geopy:
+        raise ImportError('Geopy is required for address geocoding.')
+    geoloc = Nominatim(user_agent=__name__)
+    loc = geoloc.geocode(address)
+    return Point(loc.longitude, loc.latitude)
+
+
 @click.command(name='search')
 @click.option('-b', '--begin', type=click.STRING,
               help='Begin search date (YYYY-MM-DD).')
@@ -111,10 +128,7 @@ def search(begin, end, geojson, latlon, address, path, row, clouds, sensors,
         y, x = latlon
         geom = Point(x, y)
     elif address:
-        geoloc = Nominatim(user_agent='pylandsat')
-        loc = geoloc.geocode(address)
-        x, y = loc.longitude, loc.latitude
-        geom = Point(x, y)
+        geom = _geom_from_address(address)
     else:
         geom = None
 
