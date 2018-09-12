@@ -121,7 +121,7 @@ def sync_catalog():
         chunk.BASE_URL = chunk.BASE_URL.apply(_gs_to_http)
         values = zip(
             chunk.PRODUCT_ID, chunk.SCENE_ID, chunk.WRS_PATH, chunk.WRS_ROW,
-            chunk.SENSING_TIME, chunk.CLOUD_COVER, chunk.BASE_URL)
+            chunk.SENSING_TIME, chunk.CLOUD_COVER)
         c.executemany(queries.CATALOG_UPDATE, values)
         progress.update(nrows)
 

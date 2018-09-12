@@ -8,15 +8,13 @@ CREATE TABLE IF NOT EXISTS catalog (
     path INTEGER,
     row INTEGER,
     sensing_time INTEGER,
-    cloud_cover FLOAT,
-    total_size INTEGER,
-    base_url TEXT
+    cloud_cover FLOAT
 );"""
 
 # Insert values into catalog table
 CATALOG_UPDATE = """
 INSERT OR IGNORE INTO catalog (product_id, scene_id, path, row,
-  sensing_time, cloud_cover, total_size, base_url)
+  sensing_time, cloud_cover)
   VALUES (?, ?, ?, ?, ?, ?, ?, ?);"""
 
 # Create index on path/row
