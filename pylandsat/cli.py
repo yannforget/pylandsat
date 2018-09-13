@@ -95,7 +95,7 @@ def _geom_from_address(address):
 
 def _to_csv(records, output_file):
     """Write a list of dicts to a CSV file."""
-    if not len(records):
+    if not records:
         return
     with open(output_file, 'w') as dst:
         writer = csv.DictWriter(dst, records[0].keys())
