@@ -43,6 +43,7 @@ def list_sensors():
 @click.command(name='list-available-files')
 @click.argument('sensor', type=click.STRING)
 def list_available_files(sensor):
+    """Print available sensors."""
     res = resource_string(__name__, 'files.json')
     files = json.loads(res)
     if sensor not in files:
