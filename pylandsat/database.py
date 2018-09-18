@@ -5,7 +5,7 @@ and export them to a Spatialite-enabled SQLite database.
 from collections import OrderedDict
 import csv
 from datetime import datetime
-import dateutil
+from dateutil.parser import isoparse
 import os
 import shutil
 import sqlite3
@@ -79,7 +79,7 @@ class LandsatDB:
 
 def _parse_datestring(datestring):
     """Parse ISO-8601 date string from the index.csv file."""
-    date = dateutil.parser.isoparse(datestring[:26])
+    date = isoparse(datestring[:26])
     return int(date.timestamp())
 
 
