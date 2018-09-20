@@ -84,6 +84,18 @@ WHERE Intersects(wrs.geom, GeomFromText(?, 4326))
   );
 """
 
+# Get metadata for a given product ID
+CATALOG_SEARCH_PRODUCT = """
+SELECT catalog.product_id, catalog.scene_id, catalog.path, catalog.row,
+  date(catalog.sensing_time, 'unixepoch') AS sensing_time,
+  catalog.cloud_cover, AsText(wrs.geom) AS geom
+FROM catalog
+INNER JOIN wrs ON catalog.path = wrs.path
+  AND catalog.row = wrs.row
+WHERE
+  product_id = ?
+"""
+
 # Count rows in a given table
 COUNT = "SELECT COUNT(*) FROM ?"
 
