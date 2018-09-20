@@ -136,3 +136,11 @@ class Catalog():
                 pr.update(cover=cover)
 
         return path_row
+
+    def metadata(self, product_id):
+        """Get available metadata for a given scene identified
+        by its Product Identifier.
+        """
+        response = self.db.query(
+            queries.CATALOG_SEARCH_PRODUCT, params=(product_id, ))
+        return response[0]
