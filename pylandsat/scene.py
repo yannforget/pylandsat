@@ -9,12 +9,14 @@ Glossary of variables referring to a band with examples :
   * band short name : 'nir'
 """
 
+from itertools import chain
 from datetime import datetime
 import json
 import os
 from pkg_resources import resource_string
 
 import rasterio
+from rasterio.path import parse_path
 
 from pylandsat import preprocessing
 
@@ -55,7 +57,7 @@ def _suffix_from_name(band_name, sensor):
     if sensor not in BANDS:
         raise ValueError('Sensor %s not found.' % sensor)
     for suffix, long_name in BANDS[sensor].items():
-        if band_name == long_name or band_name == _band_shortname(band_name):
+        if band_name in (long_name, _band_shortname(long_name)):
             return suffix
     raise ValueError('Band %s not found.' % band_name)
 
@@ -103,6 +105,14 @@ class Scene:
         if name in self.available_bands():
             return Band(self, _suffix_from_name(name, self.sensor))
         raise AttributeError()
+    
+    def __iter__(self):
+        """Iterate over bands."""
+        available = self.available_bands()
+        for suffix, long_name in BANDS[self.sensor].items():
+            short_name = _band_shortname(long_name)
+            if short_name in available:
+                yield Band(self, suffix)
 
     def _available_files(self):
         """List available files in the scene directory."""
@@ -155,12 +165,18 @@ class Scene:
     @property
     def scene_id(self):
         """Landsat scene identifier."""
-        return self.mtl['METADATA_FILE_INFO']['SCENE_ID']
+        if 'SCENE_ID' in self.mtl['METADATA_FILE_INFO']:
+            return self.mtl['METADATA_FILE_INFO']['SCENE_ID']
+        else:
+            return self.mtl['METADATA_FILE_INFO']['LANDSAT_SCENE_ID']
 
     @property
     def product_id(self):
         """Landsat product identifier."""
-        return self.mtl['METADATA_FILE_INFO']['PRODUCT_ID']
+        if 'PRODUCT_ID' in self.mtl['METADATA_FILE_INFO']:
+            return self.mtl['METADATA_FILE_INFO']['PRODUCT_ID']
+        else:
+            return self.mtl['METADATA_FILE_INFO']['LANDSAT_PRODUCT_ID']
 
     @property
     def spacecraft(self):
@@ -197,82 +213,74 @@ class Scene:
         return Band(self, 'BQA')
 
 
-class Band:
+class Band(rasterio.io.DatasetReader):
+
     def __init__(self, scene, suffix):
-        """A Landsat Band."""
         self.scene = scene
         self.suffix = suffix
-        self.path = self.scene.file_path(suffix)
-        self.long_name = BANDS[self.scene.sensor][suffix]
-        self.name = _band_shortname(self.long_name)
-        self.bnum = _band_number(self.suffix)
-
-    def read(self):
-        """Read band data as a numpy 2d array."""
-        with rasterio.open(self.path) as src:
-            return src.read(1)
-
-    @property
-    def profile(self):
-        """Rasterio profile."""
-        with rasterio.open(self.path) as src:
-            return src.profile
-
-    @property
-    def crs(self):
-        """Raster CRS."""
-        with rasterio.open(self.path) as src:
-            return src.crs
-
-    @property
-    def transform(self):
-        """Raster affine transform."""
-        with rasterio.open(self.path) as src:
-            return src.transform
-
-    @property
-    def width(self):
-        """Raster width."""
-        with rasterio.open(self.path) as src:
-            return src.width
-
-    @property
-    def height(self):
-        """Raster height."""
-        with rasterio.open(self.path) as src:
-            return src.height
+        self.fname = '{pid}_{suffix}.TIF'.format(
+            pid=scene.product_id,
+            suffix=suffix
+        )
+        self.fpath = os.path.join(scene.dir, self.fname)
+        if suffix == 'BQA':
+            self.long_name = 'Quality Band'
+            self.bname = 'bqa'
+            self.bnum = None
+        else:
+            self.long_name = BANDS[self.scene.sensor][suffix]
+            self.bname = _band_shortname(self.long_name)
+            self.bnum = _band_number(self.suffix)
+        super().__init__(parse_path(self.fpath))
 
     def _gain_bias(self, unit='radiance'):
         """Get band-specific radiometric rescaling factor.
         Returns a (gain, bias) tuple. Unit can be radiance or
         reflectance.
         """
-        key_gain = unit.upper() + '_MULT_BAND_' + self.bnum
-        key_bias = unit.upper() + '_ADD_BAND_' + self.bnum
+        key_gain = unit.upper() + '_MULT_BAND_' + str(self.bnum)
+        key_bias = unit.upper() + '_ADD_BAND_' + str(self.bnum)
         gain = self.scene.mtl['RADIOMETRIC_RESCALING'][key_gain]
         bias = self.scene.mtl['RADIOMETRIC_RESCALING'][key_bias]
         return gain, bias
 
     def _k1_k2(self):
         """Get band-specific thermal constants."""
-        k1_key = 'K1_CONSTANT_BAND_' + self.bnum
-        k2_key = 'K2_CONSTANT_BAND_' + self.bnum
+        k1_key = 'K1_CONSTANT_BAND_' + str(self.bnum)
+        k2_key = 'K2_CONSTANT_BAND_' + str(self.bnum)
         k1 = self.scene.mtl['THERMAL_CONSTANTS'][k1_key]
         k2 = self.scene.mtl['THERMAL_CONSTANTS'][k2_key]
         return k1, k2
 
-    def to_radiance(self):
+    def to_radiance(self, custom_dn=None):
         """Convert DN values to TOA spectral radiance."""
+        if isinstance(custom_dn, np.ndarray):
+            dn = custom_dn
+        else:
+            dn = self.read(1)
         gain, bias = self._gain_bias(unit='radiance')
-        return preprocessing.to_radiance(self.read(), gain, bias)
+        return preprocessing.to_radiance(dn, gain, bias)
 
-    def to_reflectance(self):
+    def to_reflectance(self, custom_dn=None):
         """Convert DN values to TOA spectral reflectance."""
+        if 'tir' in self.bname:
+            raise ValueError('TIR bands cannot be converted to reflectance.')
+        if isinstance(custom_dn, np.ndarray):
+            dn = custom_dn
+        else:
+            dn = self.read(1)
         gain, bias = self._gain_bias(unit='reflectance')
-        return preprocessing.to_reflectance(self.read(), gain, bias)
+        return preprocessing.to_reflectance(dn, gain, bias)
 
-    def to_brightness_temperature(self):
+    def to_brightness_temperature(self, custom_dn=None):
         """Convert DN values to brightness temperature."""
-        radiance = self.to_radiance()
+        if not 'tir' in self.bname:
+            raise ValueError('Only thermal bands can be converted '
+                             'to brightness temperature.')
+        if isinstance(custom_dn, np.ndarray):
+            dn = custom_dn
+        else:
+            dn = self.read(1)
+        radiance = self.to_radiance(custom_dn=dn)
         k1, k2 = self._k1_k2()
         return preprocessing.to_brightness_temperature(radiance, k1, k2)
