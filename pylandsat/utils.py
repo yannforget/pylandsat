@@ -3,8 +3,18 @@ import os
 import hashlib
 from datetime import datetime
 
+import rasterio
 import requests
 from tqdm import tqdm
+
+
+def bounds_from_transform(transform, width, height):
+    """Calculate raster bounds from transform, width & height."""
+    xres, yres = transform.a, transform.e
+    left, top = transform.c, transform.f
+    right = left + xres * width
+    bottom = top + yres * height
+    return rasterio.coords.BoundingBox(left, bottom, right, top)
 
 
 def meta_from_pid(product_id):
