@@ -41,7 +41,7 @@ class Product:
             basename = self.product_id + '_' + label
         return self.baseurl + basename
 
-    def download(self, out_dir, files=None):
+    def download(self, out_dir, progressbar=True, files=None):
         """Download a Landsat product.
 
         Parameters
@@ -49,6 +49,8 @@ class Product:
         out_dir : str
             Path to output directory. A subdirectory named after the
             product ID will automatically be created.
+        progressbar : bool, optional
+            Show a progress bar.
         files : list of str, optional
             Specify the files to download manually. By default, all available
             files will be downloaded.
@@ -62,4 +64,4 @@ class Product:
 
         for label in files:
             url = self._url(label)
-            download_file(url, dst_dir, progressbar=True, verify=True)
+            download_file(url, dst_dir, progressbar=progressbar, verify=True)
