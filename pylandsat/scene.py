@@ -15,6 +15,7 @@ import json
 import os
 from pkg_resources import resource_string
 
+import numpy as np
 import rasterio
 from rasterio.path import parse_path
 
