@@ -66,7 +66,7 @@ pylandsat sync-database
 pylandsat -f sync-database
 ```
 
-The database is stored in a local directory that can be display using the following command :
+The database is stored in a local directory that can be displayed using the following command :
 
 ```bash
 pylandsat print-datadir
@@ -201,9 +201,16 @@ print(scene.mtl['IMAGE_ATTRIBUTES']['CLOUD_COVER_LAND'])
 plt.imshow(scene.quality.read())
 
 # Access band data
-nir = scene.nir.read()
-red = scene.red.read()
+nir = scene.nir.read(1)
+red = scene.red.read(1)
 ndvi = (nir + red) / (nir - red)
+
+# Access band metadata
+print(scene.nir.bname)
+print(scene.nir.fname)
+print(scene.nir.profile)
+print(scene.nir.width, scene.nir.height)
+print(scene.nir.crs)
 
 # Use reflectance values instead of DN
 nir = scene.nir.to_reflectance()
