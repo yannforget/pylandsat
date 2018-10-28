@@ -239,18 +239,34 @@ class Band(rasterio.io.DatasetReader):
         Returns a (gain, bias) tuple. Unit can be radiance or
         reflectance.
         """
-        key_gain = unit.upper() + '_MULT_BAND_' + str(self.bnum)
-        key_bias = unit.upper() + '_ADD_BAND_' + str(self.bnum)
+        if self.bnum == 61:
+            bnum = '6_VCID_1'
+        elif self.bnum == 62:
+            bnum = '6_VCID_2'
+        else:
+            bnum = str(self.bnum)
+        key_gain = unit.upper() + '_MULT_BAND_' + bnum
+        key_bias = unit.upper() + '_ADD_BAND_' + bnum
         gain = self.scene.mtl['RADIOMETRIC_RESCALING'][key_gain]
         bias = self.scene.mtl['RADIOMETRIC_RESCALING'][key_bias]
         return gain, bias
 
     def _k1_k2(self):
         """Get band-specific thermal constants."""
-        k1_key = 'K1_CONSTANT_BAND_' + str(self.bnum)
-        k2_key = 'K2_CONSTANT_BAND_' + str(self.bnum)
-        k1 = self.scene.mtl['THERMAL_CONSTANTS'][k1_key]
-        k2 = self.scene.mtl['THERMAL_CONSTANTS'][k2_key]
+        if self.bnum == 61:
+            bnum = '6_VCID_1'
+        elif self.bnum == 62:
+            bnum = '6_VCID_2'
+        else:
+            bnum = str(self.bnum)
+        k1_key = 'K1_CONSTANT_BAND_' + bnum
+        k2_key = 'K2_CONSTANT_BAND_' + bnum
+        if self.scene.spacecraft == 'LANDSAT_8':
+            k1 = self.scene.mtl['TIRS_THERMAL_CONSTANTS'][k1_key]
+            k2 = self.scene.mtl['TIRS_THERMAL_CONSTANTS'][k2_key]
+        else:
+            k1 = self.scene.mtl['THERMAL_CONSTANTS'][k1_key]
+            k2 = self.scene.mtl['THERMAL_CONSTANTS'][k2_key]
         return k1, k2
 
     def to_radiance(self, custom_dn=None):
