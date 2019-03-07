@@ -182,7 +182,7 @@ def download(products, output_dir, files):
     for i, pid in enumerate(products):
         click.echo('Downloading {} ({}/{}).'.format(pid, i+1, len(products)))
         product = Product(pid)
-        product.download(output_dir, files)
+        product.download(output_dir, progressbar=True, files=files)
 
 
 cli.add_command(search)
