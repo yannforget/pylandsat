@@ -63,5 +63,7 @@ class Product:
             files = [f for f in files if f in self.available]
 
         for label in files:
+            if '.tif' in label:
+                label = label.replace('.tif', '.TIF')
             url = self._url(label)
             download_file(url, dst_dir, progressbar=progressbar, verify=True)
