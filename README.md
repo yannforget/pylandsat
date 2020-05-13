@@ -152,7 +152,6 @@ pylandsat list-available-files LT05
 ``` python
 from datetime import datetime
 
-import pandas as pd
 from shapely.geometry import Point
 from pylandsat import Catalog, Product
 
@@ -162,7 +161,7 @@ begin = datetime(2000, 1, 1)
 end = datetime(2010, 1, 1)
 geom = Point(4.34, 50.85)
 
-# Results are returned as a pandas dataframe
+# Results are returned as a list
 scenes = catalog.search(
     begin=begin,
     end=end,
