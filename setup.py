@@ -11,7 +11,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='pylandsat',
-    version='0.2',
+    version='0.4',
     description='Search, download and preprocess Landsat imagery',
     long_description=LONG_DESC,
     long_description_content_type='text/markdown',
@@ -37,7 +37,6 @@ setup(
         'requests',
         'fiona',
         'shapely',
-        'pandas',
         'tqdm',
         'numpy',
         'rasterio',

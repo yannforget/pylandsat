@@ -25,7 +25,7 @@ def _to_list(value):
         return [value]
 
 
-class Catalog():
+class Catalog:
     """Perform queries on the Landsat catalog."""
 
     def __init__(self):
@@ -61,8 +61,8 @@ class Catalog():
 
         Returns
         -------
-        scenes : dataframe
-            Search results as a pandas dataframe.
+        scenes : List
+            Search results as a list.
         """
         # Convert strings to list if necessary
         path, row = _to_list(path), _to_list(row)
