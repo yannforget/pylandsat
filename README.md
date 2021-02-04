@@ -63,7 +63,7 @@ To allow large and fast queries, **pylandsat** works with a local dump of the La
 pylandsat sync-database
 
 # Force update
-pylandsat -f sync-database
+pylandsat sync-database -f
 ```
 
 The database is stored in a local directory that can be displayed using the following command :
