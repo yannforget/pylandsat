@@ -98,59 +98,58 @@ def sync_catalog():
     accordingly.
     """
     CATALOG_URL = 'https://storage.googleapis.com/gcp-public-data-landsat/index.csv.gz'
-    tmpdir = tempfile.mkdtemp(prefix='pylandsat_')
-    fpath = utils.download_file(CATALOG_URL, tmpdir, progressbar=True)
-    fpath = utils.decompress(fpath, remove_archive=True)
+    with tempfile.TemporaryDirectory(prefix="pylandsat_") as tmpdir:
+        fpath = utils.download_file(CATALOG_URL, tmpdir, progressbar=True)
+        fpath = utils.decompress(fpath, remove_archive=True)
 
-    # Create database and 'catalog' table
-    db = LandsatDB()
-    conn = db.connect()
-    c = conn.cursor()
-    c.execute(queries.CATALOG_CREATE)
-    conn.commit()
+        # Create database and 'catalog' table
+        db = LandsatDB()
+        conn = db.connect()
+        c = conn.cursor()
+        c.execute(queries.CATALOG_CREATE)
+        conn.commit()
 
-    # Insert CSV rows into the SQLite database
-    length = sum(1 for line in open(fpath))
-    progress = tqdm(total=length, unit=' rows')
-    with open(fpath) as src:
-        reader = csv.reader(src)
-        _ = reader.__next__()  # ignore header
-        for row in reader:
-            if row[1]:
-                c.execute(queries.CATALOG_UPDATE, _parse_row(row))
-            progress.update(1)
-    progress.close()
-    conn.commit()
-    conn.close()
-    shutil.rmtree(tmpdir)
+        # Insert CSV rows into the SQLite database
+        length = sum(1 for line in open(fpath))
+        progress = tqdm(total=length, unit=' rows')
+        with open(fpath) as src:
+            reader = csv.reader(src)
+            _ = reader.__next__()  # ignore header
+            for row in reader:
+                if row[1]:
+                    c.execute(queries.CATALOG_UPDATE, _parse_row(row))
+                progress.update(1)
+        progress.close()
+        conn.commit()
+        conn.close()
 
 
 def sync_wrs():
     """Download WRS2 descending shapefile from USGS and export it to a
     Spatialite-enabled SQLite table.
     """
-    WRS_URL = 'https://landsat.usgs.gov/sites/default/files/documents/WRS2_descending.zip'
-    tmpdir = tempfile.mkdtemp(prefix='pylandsat_')
-    fpath = utils.download_file(WRS_URL, tmpdir)
+    WRS_URL = 'https://prd-wret.s3.us-west-2.amazonaws.com/assets/palladium/production/s3fs-public/atoms/files/WRS2_descending_0.zip'
+    
+    with tempfile.TemporaryDirectory(prefix="pylandsat_") as tmpdir:
+        fpath = utils.download_file(WRS_URL, tmpdir, progressbar=True)
 
-    # Connect to the database, init spatial metadata and create the table
-    db = LandsatDB()
-    conn = db.connect()
-    c = conn.cursor()
-    c.executescript(queries.WRS_CREATE)
-    conn.commit()
+        # Connect to the database, init spatial metadata and create the table
+        db = LandsatDB()
+        conn = db.connect()
+        c = conn.cursor()
+        c.executescript(queries.WRS_CREATE)
+        conn.commit()
 
-    def _to_wkt(feature):
-        geom = shape(feature['geometry'])
-        return wkt.dumps(geom, rounding_precision=8)
+        def _to_wkt(feature):
+            geom = shape(feature['geometry'])
+            return wkt.dumps(geom, rounding_precision=8)
 
-    # Insert values and create the spatial index
-    collection = fiona.open('/WRS2_descending.shp', vfs='zip://' + fpath)
-    values = ((f['properties']['PATH'], f['properties']['ROW'], _to_wkt(f))
-              for f in collection)
-    c.executemany(queries.WRS_UPDATE, values)
-    c.execute(queries.WRS_INDEX)
+        # Insert values and create the spatial index
+        collection = fiona.open('/WRS2_descending.shp', vfs='zip://' + fpath)
+        values = ((f['properties']['PATH'], f['properties']['ROW'], _to_wkt(f))
+                for f in collection)
+        c.executemany(queries.WRS_UPDATE, values)
+        c.execute(queries.WRS_INDEX)
 
-    conn.commit()
-    conn.close()
-    shutil.rmtree(tmpdir)
+        conn.commit()
+        conn.close()
