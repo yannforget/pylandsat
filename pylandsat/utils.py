@@ -84,11 +84,11 @@ def download_file(url, outdir, progressbar=False, verify=False):
         progress = tqdm(total=remotesize, unit='B', unit_scale=True)
         progress.set_description(fname)
     with open(fpath, 'wb') as f:
-        for chunk in r.iter_content(chunk_size=1024**2):
+        for chunk in r.iter_content(chunk_size=1024 * 1024):
             if chunk:
                 f.write(chunk)
                 if progressbar:
-                    progress.update(1024**2)
+                    progress.update(1024 * 1024)
 
     r.close()
     if progressbar:
