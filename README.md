@@ -179,6 +179,8 @@ product.download(out_dir='data')
 # The output of catalog.search() can be converted to a DataFrame
 # for further processing. For instance:
 # Get the product ID of the scene with the lowest cloud cover
+import pandas as pd
+
 df = pd.DataFrame.from_dict(scenes)
 df.set_index(["product_id"], inplace=True)
 df = df.sort_values(by='cloud_cover', ascending=True)
