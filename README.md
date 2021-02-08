@@ -169,13 +169,20 @@ scenes = catalog.search(
     sensors=['LE07', 'LC08']
 )
 
-# Get the product ID of the scene with the lowest cloud cover
-scenes = scenes.sort_values(by='cloud_cover', ascending=True)
-product_id = scenes.index[0]
+# Get the product ID of the first scene
+product_id = scenes[0].get("product_id")
 
 # Download the scene
 product = Product(product_id)
 product.download(out_dir='data')
+
+# The output of catalog.search() can be converted to a DataFrame
+# for further processing. For instance:
+# Get the product ID of the scene with the lowest cloud cover
+df = pd.DataFrame.from_dict(scenes)
+df.set_index(["product_id"], inplace=True)
+df = df.sort_values(by='cloud_cover', ascending=True)
+product_id = df.index[0]
 ```
 
 ## Load and preprocess data
