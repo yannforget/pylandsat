@@ -44,7 +44,7 @@ class Product:
             basename = self.product_id + "_" + label
         return self.baseurl + basename
 
-    def download(self, out_dir, progressbar=True, files=None):
+    def download(self, out_dir, progressbar=True, files=None, verify=True):
         """Download a Landsat product.
 
         Parameters
@@ -57,6 +57,8 @@ class Product:
         files : list of str, optional
             Specify the files to download manually. By default, all available
             files will be downloaded.
+        verify : bool, optional
+            Check downloaded files for corruption (True by default).
         """
         dst_dir = os.path.join(out_dir, self.product_id)
         os.makedirs(dst_dir, exist_ok=True)
@@ -69,4 +71,4 @@ class Product:
             if ".tif" in label:
                 label = label.replace(".tif", ".TIF")
             url = self._url(label)
-            download_file(url, dst_dir, progressbar=progressbar, verify=True)
+            download_file(url, dst_dir, progressbar=progressbar, verify=verify)
