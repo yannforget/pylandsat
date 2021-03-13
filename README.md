@@ -1,3 +1,8 @@
+[![Build](https://img.shields.io/github/workflow/status/yannforget/pylandsat/Publish%20package?label=build&logo=github)](https://github.com/yannforget/pylandsat/actions/workflows/publish-to-pypi.yml)
+[![Tests](https://img.shields.io/github/workflow/status/yannforget/pylandsat/Run%20tests?label=tests&logo=github)](https://github.com/yannforget/pylandsat/actions/workflows/run-tests.yml)
+[![codecov](https://codecov.io/gh/yannforget/pylandsat/branch/master/graph/badge.svg?token=YB1XC4TKX3)](https://codecov.io/gh/yannforget/pylandsat)
+[![DOI](https://zenodo.org/badge/148338639.svg)](https://zenodo.org/badge/latestdoi/148338639)
+
 # Description
 
 **pylandsat** is a Python package that allows you to search and download

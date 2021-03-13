@@ -6,12 +6,15 @@ from pkg_resources import resource_string
 
 from pylandsat.utils import download_file, meta_from_pid
 
-BASE_URL = ('https://storage.googleapis.com/gcp-public-data-landsat/'
-            '{sensor}/{collection:02}/{path:03}/{row:03}/{product_id}/')
+BASE_URL = (
+    "https://storage.googleapis.com/gcp-public-data-landsat/"
+    "{sensor}/{collection:02}/{path:03}/{row:03}/{product_id}/"
+)
 
 
 class Product:
     """Landsat product to download."""
+
     def __init__(self, product_id):
         """Initialize a product download.
 
@@ -29,19 +32,19 @@ class Product:
     @property
     def available(self):
         """List all available files."""
-        resource = resource_string(__name__, 'files.json')
+        resource = resource_string(__name__, "files.json")
         labels = json.loads(resource)
-        return labels[self.meta['sensor']]
+        return labels[self.meta["sensor"]]
 
     def _url(self, label):
         """Get download URL of a given file according to its label."""
-        if 'README' in label:
+        if "README" in label:
             basename = label
         else:
-            basename = self.product_id + '_' + label
+            basename = self.product_id + "_" + label
         return self.baseurl + basename
 
-    def download(self, out_dir, progressbar=True, files=None):
+    def download(self, out_dir, progressbar=True, files=None, verify=True):
         """Download a Landsat product.
 
         Parameters
@@ -54,6 +57,8 @@ class Product:
         files : list of str, optional
             Specify the files to download manually. By default, all available
             files will be downloaded.
+        verify : bool, optional
+            Check downloaded files for corruption (True by default).
         """
         dst_dir = os.path.join(out_dir, self.product_id)
         os.makedirs(dst_dir, exist_ok=True)
@@ -63,7 +68,7 @@ class Product:
             files = [f for f in files if f in self.available]
 
         for label in files:
-            if '.tif' in label:
-                label = label.replace('.tif', '.TIF')
+            if ".tif" in label:
+                label = label.replace(".tif", ".TIF")
             url = self._url(label)
-            download_file(url, dst_dir, progressbar=progressbar, verify=True)
+            download_file(url, dst_dir, progressbar=progressbar, verify=verify)
