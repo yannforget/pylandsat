@@ -74,7 +74,7 @@ pylandsat sync-database -f
 The database is stored in a local directory that can be displayed using the following command :
 
 ```bash
-pylandsat print-datadir
+pylandsat print-data-dir
 ```
 
 Once the database has been created, the local catalog can be queried.
